@@ -25,7 +25,7 @@ as $$
   );
 $$;
 
-revoke execute on function public.is_family() from anon;
+revoke execute on function public.is_family() from public, anon;
 grant execute on function public.is_family() to authenticated;
 
 -- ---------------------------------------------------------------------------
@@ -42,6 +42,7 @@ create table if not exists public.events (
 
 create index if not exists events_timestamp_idx on public.events (timestamp desc);
 create index if not exists events_event_type_idx on public.events (event_type);
+create index if not exists events_created_by_idx on public.events (created_by);
 
 create table if not exists public.profile_items (
   id uuid primary key default gen_random_uuid(),
