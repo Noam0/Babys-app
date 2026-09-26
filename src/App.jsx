@@ -80,7 +80,14 @@ function App() {
   const deleteProfileItem = withToast(profileItems.remove, 'הפריט נמחק', 'שגיאה במחיקת הפריט')
 
   const updateFamily = withToast(familyState.updateFamily, 'הפרטים עודכנו', 'שגיאה בעדכון הפרטים')
-  const saveWeight = withToast(familyState.saveWeight, 'המשקל עודכן', 'שגיאה בשמירת המשקל')
+  const saveWeight = withToast(async (kg) => {
+    await familyState.saveWeight(kg)
+    await events.add({
+      event_type: 'weight',
+      details: { kg },
+      timestamp: new Date().toISOString()
+    })
+  }, 'המשקל עודכן', 'שגיאה בשמירת המשקל')
   const savePhotoUrl = withToast(familyState.savePhotoUrl, 'התמונה עודכנה', 'שגיאה בשמירת התמונה')
   const savePhotoFile = withToast(familyState.savePhotoFile, 'התמונה עודכנה', 'שגיאה בהעלאת התמונה')
 

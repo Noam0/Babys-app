@@ -19,6 +19,16 @@
   #root {
     min-height: 100vh;
   }
+
+  /* iOS date fields are wider than their box, especially in RTL */
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"] {
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    direction: ltr;
+  }
 }
 
 @layer utilities {

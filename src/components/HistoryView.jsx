@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Filter } from 'lucide-react'
 import EventItem from './EventItem'
+import WeightTimeline from './WeightTimeline'
+import { DateField } from './DateTimeFields'
 import { formatDayHeading, toLocalDateKey } from '../utils/dateUtils'
 import { EVENT_TYPE_LABELS } from '../utils/eventOptions'
 
@@ -82,7 +84,7 @@ const HistoryView = ({ events, onUpdate, onDelete }) => {
       </div>
 
       {showFilters && (
-        <div className="bg-white rounded-2xl shadow-md p-4 mb-4 space-y-4">
+        <div className="bg-white rounded-2xl shadow-md p-4 mb-4 space-y-4 overflow-hidden min-w-0">
           <div>
             <p className="text-sm font-medium text-gray-600 mb-3">סנן לפי סוג:</p>
             <div className="flex flex-wrap gap-2">
@@ -113,16 +115,15 @@ const HistoryView = ({ events, onUpdate, onDelete }) => {
                 </button>
               ))}
             </div>
-            <label className="block mt-3 text-sm text-gray-600">
+            <label className="block mt-3 text-sm text-gray-600 min-w-0">
               או בחרו תאריך מדויק
-              <input
-                type="date"
+              <DateField
+                className="mt-2"
                 value={customDate}
-                onChange={(e) => {
-                  setCustomDate(e.target.value)
-                  setDayFilter(e.target.value ? 'custom' : 'all')
+                onChange={(value) => {
+                  setCustomDate(value)
+                  setDayFilter(value ? 'custom' : 'all')
                 }}
-                className="w-full mt-2 px-4 py-2 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500"
               />
             </label>
           </div>
@@ -137,6 +138,12 @@ const HistoryView = ({ events, onUpdate, onDelete }) => {
         <div className="bg-white rounded-2xl shadow p-8 text-center">
           <p className="text-gray-400 text-lg">אין אירועים להצגה</p>
         </div>
+      ) : filterType === 'weight' ? (
+        <WeightTimeline
+          events={filteredEvents}
+          onUpdate={onUpdate}
+          onDelete={onDelete}
+        />
       ) : (
         <div className="space-y-5">
           {groups.map((group) => (

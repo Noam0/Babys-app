@@ -16,7 +16,8 @@ export const EVENT_TYPE_LABELS = {
   sleep: 'שינה',
   tummy: 'זמן בטן',
   medication: 'תרופות',
-  other: 'אחר'
+  other: 'אחר',
+  weight: 'משקל'
 }
 
 export const ACTION_OPTIONS = {
@@ -54,6 +55,10 @@ export const formatTummyDuration = (duration) => {
 
 export const getEventDetailsText = (event) => {
   const details = event.details || {}
+
+  if (event.event_type === 'weight' && details.kg != null) {
+    return `${Number(details.kg).toFixed(2)} ק"ג`
+  }
 
   if (event.event_type === 'tummy' && details.duration != null) {
     return formatTummyDuration(details.duration)

@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Plus, Edit2, Trash2, Check, X, Calendar, LogOut, Copy } from 'lucide-react'
 import BabyAvatar from './BabyAvatar'
 import ConfirmDialog from './ConfirmDialog'
-import { formatBirthString, toDatetimeLocalValue } from '../utils/dateUtils'
+import { formatBirthString } from '../utils/dateUtils'
+import { DateField, DateTimeFields } from './DateTimeFields'
 
 const EMPTY_FORM = { title: '', date: '', details: '' }
 
@@ -29,7 +30,7 @@ const ProfileView = ({ family, photo, onUpdateFamily, items, onAdd, onUpdate, on
   const [itemToDelete, setItemToDelete] = useState(null)
 
   const startBabyEdit = () => {
-    setBabyForm({ name: family.baby_name, birth: toDatetimeLocalValue(family.birth_datetime) })
+    setBabyForm({ name: family.baby_name, birth: new Date(family.birth_datetime) })
     setIsEditingBaby(true)
   }
 
@@ -37,7 +38,7 @@ const ProfileView = ({ family, photo, onUpdateFamily, items, onAdd, onUpdate, on
     if (!babyForm.name.trim() || !babyForm.birth) return
     await onUpdateFamily({
       baby_name: babyForm.name.trim(),
-      birth_datetime: new Date(babyForm.birth).toISOString()
+      birth_datetime: babyForm.birth.toISOString()
     })
     setIsEditingBaby(false)
   }
@@ -110,7 +111,7 @@ const ProfileView = ({ family, photo, onUpdateFamily, items, onAdd, onUpdate, on
         </div>
 
         {isEditingBaby && (
-          <div className="mt-4 space-y-3">
+          <div className="mt-4 space-y-3 min-w-0 overflow-hidden">
             <input
               type="text"
               value={babyForm.name}
@@ -118,11 +119,10 @@ const ProfileView = ({ family, photo, onUpdateFamily, items, onAdd, onUpdate, on
               placeholder="שם התינוק"
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500"
             />
-            <input
-              type="datetime-local"
+            <DateTimeFields
+              label=""
               value={babyForm.birth}
-              onChange={(e) => setBabyForm({ ...babyForm, birth: e.target.value })}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500"
+              onChange={(birth) => setBabyForm({ ...babyForm, birth })}
             />
             <div className="flex gap-2">
               <button
@@ -220,11 +220,9 @@ const ProfileView = ({ family, photo, onUpdateFamily, items, onAdd, onUpdate, on
             <label className="block text-sm font-medium text-gray-700 mb-2">
               תאריך (אופציונאלי)
             </label>
-            <input
-              type="date"
+            <DateField
               value={formData.date}
-              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500"
+              onChange={(date) => setFormData({ ...formData, date })}
             />
           </div>
 

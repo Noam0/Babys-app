@@ -22,6 +22,12 @@ export const formatBirthString = (birthDatetime) => {
 // Value format expected by <input type="datetime-local">
 export const toDatetimeLocalValue = (date) => format(new Date(date), "yyyy-MM-dd'T'HH:mm")
 
+export const toDateInputValue = (date) => format(new Date(date), 'yyyy-MM-dd')
+
+export const toTimeInputValue = (date) => format(new Date(date), 'HH:mm')
+
+export const formatShortDate = (date) => format(new Date(date), 'dd.MM.yyyy')
+
 export const formatEventTime = (date) => {
   return format(new Date(date), 'HH:mm')
 }

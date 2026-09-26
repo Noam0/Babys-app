@@ -1,32 +1,37 @@
 import { useState } from 'react'
-import { Edit2, Trash2, Check, X } from 'lucide-react'
-import { formatEventTime, formatFullDate, toDatetimeLocalValue } from '../utils/dateUtils'
+import { Edit2, Trash2, Check, X, Baby } from 'lucide-react'
+import { formatEventTime, formatFullDate } from '../utils/dateUtils'
 import { ACTION_OPTIONS, EVENT_TYPE_LABELS, getEventDetailsText, getOptionMeta } from '../utils/eventOptions'
 import ConfirmDialog from './ConfirmDialog'
+import { DateTimeFields } from './DateTimeFields'
 
 const EventItem = ({ event, onUpdate, onDelete, showFullDate = false }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [editValue, setEditValue] = useState(event.details?.custom || '')
+  const [editKg, setEditKg] = useState(event.details?.kg != null ? String(event.details.kg) : '')
   const [editOption, setEditOption] = useState(event.details?.option || '')
-  const [editTime, setEditTime] = useState(toDatetimeLocalValue(event.timestamp))
+  const [editTime, setEditTime] = useState(new Date(event.timestamp))
 
   const startEditing = () => {
     setEditValue(event.details?.custom || '')
+    setEditKg(event.details?.kg != null ? String(event.details.kg) : '')
     setEditOption(event.details?.option || '')
-    setEditTime(toDatetimeLocalValue(event.timestamp))
+    setEditTime(new Date(event.timestamp))
     setIsEditing(true)
   }
 
   const handleSave = () => {
-    const nextTimestamp = new Date(editTime)
-    if (Number.isNaN(nextTimestamp.getTime())) return
+    if (!editTime || Number.isNaN(editTime.getTime())) return
 
-    const updates = { timestamp: nextTimestamp.toISOString() }
+    const updates = { timestamp: editTime.toISOString() }
     const options = ACTION_OPTIONS[event.event_type]
 
     if (event.event_type === 'other') {
       updates.details = { custom: editValue.trim() || event.details?.custom || '' }
+    } else if (event.event_type === 'weight') {
+      const kg = parseFloat(editKg)
+      if (!Number.isNaN(kg) && kg > 0) updates.details = { kg }
     } else if (options && editOption) {
       updates.details = { ...event.details, option: editOption }
     }
@@ -41,11 +46,11 @@ const EventItem = ({ event, onUpdate, onDelete, showFullDate = false }) => {
   }
 
   const option = getOptionMeta(event.event_type, event.details?.option)
-  const OptionIcon = option?.icon
+  const OptionIcon = event.event_type === 'weight' ? Baby : option?.icon
   const editOptions = ACTION_OPTIONS[event.event_type]
 
   return (
-    <div className={`${EVENT_COLORS[event.event_type]} border-r-4 rounded-2xl shadow-md p-4 transition-all hover:shadow-lg`}>
+    <div className={`${EVENT_COLORS[event.event_type] || EVENT_COLORS.other} border-r-4 rounded-2xl shadow-md p-4 transition-all hover:shadow-lg overflow-hidden min-w-0`}>
       <div className="flex justify-between items-start mb-2">
         <div className="flex-1">
           <h3 className="font-bold text-lg">{EVENT_TYPE_LABELS[event.event_type]}</h3>
@@ -92,13 +97,24 @@ const EventItem = ({ event, onUpdate, onDelete, showFullDate = false }) => {
       </div>
 
       {isEditing ? (
-        <div className="space-y-3 mt-2">
+        <div className="space-y-3 mt-2 min-w-0 overflow-hidden">
           {event.event_type === 'other' && (
             <input
               type="text"
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
-              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary-500 bg-white text-gray-800"
+              className="w-full min-w-0 px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary-500 bg-white text-gray-800"
+              autoFocus
+            />
+          )}
+          {event.event_type === 'weight' && (
+            <input
+              type="number"
+              step="0.01"
+              inputMode="decimal"
+              value={editKg}
+              onChange={(e) => setEditKg(e.target.value)}
+              className="w-full min-w-0 px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary-500 bg-white text-gray-800"
               autoFocus
             />
           )}
@@ -123,15 +139,7 @@ const EventItem = ({ event, onUpdate, onDelete, showFullDate = false }) => {
               })}
             </div>
           )}
-          <label className="block text-xs font-medium opacity-80">
-            תאריך ושעה
-            <input
-              type="datetime-local"
-              value={editTime}
-              onChange={(e) => setEditTime(e.target.value)}
-              className="w-full mt-1 px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary-500 bg-white text-gray-800"
-            />
-          </label>
+          <DateTimeFields value={editTime} onChange={setEditTime} />
         </div>
       ) : (
         <p className="text-xs opacity-75">
@@ -157,7 +165,8 @@ const EVENT_COLORS = {
   sleep: 'bg-sleep-light border-sleep text-sleep-dark',
   tummy: 'bg-tummy-light border-tummy text-tummy-dark',
   medication: 'bg-medication-light border-medication text-medication-dark',
-  other: 'bg-other-light border-other text-other-dark'
+  other: 'bg-other-light border-other text-other-dark',
+  weight: 'bg-primary-50 border-primary-400 text-primary-800'
 }
 
 export default EventItem
