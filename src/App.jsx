@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase, isSupabaseConfigured } from './lib/supabase'
 import { useSyncedTable } from './hooks/useSyncedTable'
 import { useFamily } from './hooks/useFamily'
@@ -80,13 +80,27 @@ function App() {
   const deleteProfileItem = withToast(profileItems.remove, 'הפריט נמחק', 'שגיאה במחיקת הפריט')
 
   const updateFamily = withToast(familyState.updateFamily, 'הפרטים עודכנו', 'שגיאה בעדכון הפרטים')
+  const weightSaveLock = useRef(false)
   const saveWeight = withToast(async (kg) => {
-    await familyState.saveWeight(kg)
-    await events.add({
-      event_type: 'weight',
-      details: { kg },
-      timestamp: new Date().toISOString()
-    })
+    if (weightSaveLock.current) return
+    weightSaveLock.current = true
+    try {
+      await familyState.saveWeight(kg)
+      const alreadyLogged = events.rows.some((event) => (
+        event.event_type === 'weight' &&
+        Number(event.details?.kg) === Number(kg) &&
+        Date.now() - new Date(event.timestamp).getTime() < 4000
+      ))
+      if (!alreadyLogged) {
+        await events.add({
+          event_type: 'weight',
+          details: { kg },
+          timestamp: new Date().toISOString()
+        })
+      }
+    } finally {
+      weightSaveLock.current = false
+    }
   }, 'המשקל עודכן', 'שגיאה בשמירת המשקל')
   const savePhotoUrl = withToast(familyState.savePhotoUrl, 'התמונה עודכנה', 'שגיאה בשמירת התמונה')
   const savePhotoFile = withToast(familyState.savePhotoFile, 'התמונה עודכנה', 'שגיאה בהעלאת התמונה')
@@ -120,6 +134,7 @@ function App() {
   }
 
   const recentEvents = events.rows.filter(e => isWithinLast24Hours(e.timestamp))
+  const latestWeightId = events.rows.find(e => e.event_type === 'weight')?.id
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white pb-20" dir="rtl">
@@ -155,6 +170,7 @@ function App() {
             <QuickActions onAddEvent={addEvent} />
             <RecentEvents
               events={recentEvents}
+              latestWeightId={latestWeightId}
               onUpdate={updateEvent}
               onDelete={deleteEvent}
             />
@@ -164,6 +180,7 @@ function App() {
         {view === 'history' && (
           <HistoryView
             events={events.rows}
+            latestWeightId={latestWeightId}
             onUpdate={updateEvent}
             onDelete={deleteEvent}
           />

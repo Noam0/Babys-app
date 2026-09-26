@@ -1,6 +1,6 @@
 import EventItem from './EventItem'
 
-const RecentEvents = ({ events, onUpdate, onDelete }) => {
+const RecentEvents = ({ events, latestWeightId, onUpdate, onDelete }) => {
   return (
     <div className="mb-6">
       <h2 className="text-xl font-bold text-gray-800 mb-4">
@@ -17,6 +17,7 @@ const RecentEvents = ({ events, onUpdate, onDelete }) => {
             <EventItem
               key={event.id}
               event={event}
+              latestWeightId={latestWeightId}
               onUpdate={onUpdate}
               onDelete={onDelete}
             />

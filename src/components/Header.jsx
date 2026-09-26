@@ -10,6 +10,7 @@ const Header = ({ babyName, birthDatetime, weight, photo, onSaveWeight, onSavePh
   const [isEditingPhoto, setIsEditingPhoto] = useState(false)
   const [photoUrl, setPhotoUrl] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [savingWeight, setSavingWeight] = useState(false)
 
   useEffect(() => {
     setAge(formatAgeString(birthDatetime))
@@ -26,9 +27,12 @@ const Header = ({ babyName, birthDatetime, weight, photo, onSaveWeight, onSavePh
   }
 
   const handleWeightSave = async () => {
+    if (savingWeight) return
     const kg = parseFloat(tempWeight)
     if (!Number.isNaN(kg) && kg > 0) {
+      setSavingWeight(true)
       await onSaveWeight(kg)
+      setSavingWeight(false)
     }
     setIsEditingWeight(false)
   }

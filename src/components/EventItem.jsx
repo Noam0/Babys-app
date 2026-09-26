@@ -5,7 +5,7 @@ import { ACTION_OPTIONS, EVENT_TYPE_LABELS, getEventDetailsText, getOptionMeta }
 import ConfirmDialog from './ConfirmDialog'
 import { DateTimeFields } from './DateTimeFields'
 
-const EventItem = ({ event, onUpdate, onDelete, showFullDate = false }) => {
+const EventItem = ({ event, latestWeightId, onUpdate, onDelete, showFullDate = false }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [editValue, setEditValue] = useState(event.details?.custom || '')
@@ -48,9 +48,13 @@ const EventItem = ({ event, onUpdate, onDelete, showFullDate = false }) => {
   const option = getOptionMeta(event.event_type, event.details?.option)
   const OptionIcon = event.event_type === 'weight' ? Baby : option?.icon
   const editOptions = ACTION_OPTIONS[event.event_type]
+  const isLatestWeight = event.event_type === 'weight' && event.id === latestWeightId
+  const colorClass = isLatestWeight
+    ? 'bg-primary-500 border-primary-600 text-white'
+    : (EVENT_COLORS[event.event_type] || EVENT_COLORS.other)
 
   return (
-    <div className={`${EVENT_COLORS[event.event_type] || EVENT_COLORS.other} border-r-4 rounded-2xl shadow-md p-4 transition-all hover:shadow-lg overflow-hidden min-w-0`}>
+    <div className={`${colorClass} border-r-4 rounded-2xl shadow-md p-4 transition-all hover:shadow-lg overflow-hidden min-w-0`}>
       <div className="flex justify-between items-start mb-2">
         <div className="flex-1">
           <h3 className="font-bold text-lg">{EVENT_TYPE_LABELS[event.event_type]}</h3>

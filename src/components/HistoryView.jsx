@@ -53,7 +53,7 @@ const groupEventsByDay = (events) => {
   return groups
 }
 
-const HistoryView = ({ events, onUpdate, onDelete }) => {
+const HistoryView = ({ events, latestWeightId, onUpdate, onDelete }) => {
   const [filterType, setFilterType] = useState('all')
   const [dayFilter, setDayFilter] = useState('all')
   const [customDate, setCustomDate] = useState('')
@@ -156,6 +156,7 @@ const HistoryView = ({ events, onUpdate, onDelete }) => {
                   <EventItem
                     key={event.id}
                     event={event}
+                    latestWeightId={latestWeightId}
                     onUpdate={onUpdate}
                     onDelete={onDelete}
                     showFullDate
