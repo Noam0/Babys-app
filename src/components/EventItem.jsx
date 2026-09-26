@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { Edit2, Trash2, Check, X } from 'lucide-react'
 import { formatEventTime, formatFullDate, toDatetimeLocalValue } from '../utils/dateUtils'
 import { ACTION_OPTIONS, EVENT_TYPE_LABELS, getEventDetailsText, getOptionMeta } from '../utils/eventOptions'
+import ConfirmDialog from './ConfirmDialog'
 
 const EventItem = ({ event, onUpdate, onDelete, showFullDate = false }) => {
   const [isEditing, setIsEditing] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [editValue, setEditValue] = useState(event.details?.custom || '')
   const [editOption, setEditOption] = useState(event.details?.option || '')
   const [editTime, setEditTime] = useState(toDatetimeLocalValue(event.timestamp))
@@ -34,9 +36,8 @@ const EventItem = ({ event, onUpdate, onDelete, showFullDate = false }) => {
   }
 
   const handleDelete = () => {
-    if (confirm('האם אתה בטוח שברצונך למחוק אירוע זה?')) {
-      onDelete(event.id)
-    }
+    onDelete(event.id)
+    setConfirmDelete(false)
   }
 
   const option = getOptionMeta(event.event_type, event.details?.option)
@@ -80,7 +81,7 @@ const EventItem = ({ event, onUpdate, onDelete, showFullDate = false }) => {
                 <Edit2 size={16} />
               </button>
               <button
-                onClick={handleDelete}
+                onClick={() => setConfirmDelete(true)}
                 className="p-2 bg-white bg-opacity-50 rounded-lg hover:bg-opacity-80 transition-all touch-manipulation"
               >
                 <Trash2 size={16} />
@@ -136,6 +137,15 @@ const EventItem = ({ event, onUpdate, onDelete, showFullDate = false }) => {
         <p className="text-xs opacity-75">
           {showFullDate ? formatFullDate(event.timestamp) : `שעה ${formatEventTime(event.timestamp)}`}
         </p>
+      )}
+
+      {confirmDelete && (
+        <ConfirmDialog
+          title="מחיקת אירוע"
+          message="למחוק את האירוע? הפעולה הזאת לא ניתנת לביטול."
+          onConfirm={handleDelete}
+          onCancel={() => setConfirmDelete(false)}
+        />
       )}
     </div>
   )

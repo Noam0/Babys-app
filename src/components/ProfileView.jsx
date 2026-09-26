@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Plus, Edit2, Trash2, Check, X, Calendar, LogOut, Copy } from 'lucide-react'
 import BabyAvatar from './BabyAvatar'
+import ConfirmDialog from './ConfirmDialog'
 import { formatBirthString, toDatetimeLocalValue } from '../utils/dateUtils'
 
 const EMPTY_FORM = { title: '', date: '', details: '' }
@@ -25,6 +26,7 @@ const ProfileView = ({ family, photo, onUpdateFamily, items, onAdd, onUpdate, on
   const [isEditingBaby, setIsEditingBaby] = useState(false)
   const [babyForm, setBabyForm] = useState({ name: '', birth: '' })
   const [codeCopied, setCodeCopied] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState(null)
 
   const startBabyEdit = () => {
     setBabyForm({ name: family.baby_name, birth: toDatetimeLocalValue(family.birth_datetime) })
@@ -84,9 +86,7 @@ const ProfileView = ({ family, photo, onUpdateFamily, items, onAdd, onUpdate, on
   }
 
   const handleDelete = (id) => {
-    if (confirm('האם למחוק פריט זה?')) {
-      onDelete(id)
-    }
+    setItemToDelete(id)
   }
 
   return (
@@ -329,6 +329,18 @@ const ProfileView = ({ family, photo, onUpdateFamily, items, onAdd, onUpdate, on
             <span>התנתקות</span>
           </button>
         </div>
+      )}
+
+      {itemToDelete && (
+        <ConfirmDialog
+          title="מחיקת פריט"
+          message="למחוק את הפריט מהפרופיל? הפעולה הזאת לא ניתנת לביטול."
+          onConfirm={() => {
+            onDelete(itemToDelete)
+            setItemToDelete(null)
+          }}
+          onCancel={() => setItemToDelete(null)}
+        />
       )}
     </div>
   )
