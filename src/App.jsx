@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import { supabase, isSupabaseConfigured } from './lib/supabase'
 import { useSyncedTable } from './hooks/useSyncedTable'
-import { useBabySettings } from './hooks/useBabySettings'
+import { useFamily } from './hooks/useFamily'
 import Header from './components/Header'
 import QuickActions from './components/QuickActions'
 import RecentEvents from './components/RecentEvents'
 import HistoryView from './components/HistoryView'
 import ProfileView from './components/ProfileView'
 import Login from './components/Login'
+import FamilySetup from './components/FamilySetup'
 import Toast from './components/Toast'
 import { Home, History, User } from 'lucide-react'
 import { isWithinLast24Hours } from './utils/dateUtils'
@@ -18,11 +19,17 @@ const NAV_ITEMS = [
   { id: 'profile', label: 'פרופיל', icon: User }
 ]
 
+const FullScreenMessage = ({ children }) => (
+  <div className="min-h-screen flex items-center justify-center text-gray-400 px-6 text-center" dir="rtl">
+    {children}
+  </div>
+)
+
 function App() {
   const [view, setView] = useState('main')
   const [toast, setToast] = useState(null)
   const [session, setSession] = useState(null)
-  const [authReady, setAuthReady] = useState(!isSupabaseConfigured)
+  const [authReady, setAuthReady] = useState(false)
 
   useEffect(() => {
     if (!isSupabaseConfigured) return
@@ -38,19 +45,11 @@ function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const signedIn = !isSupabaseConfigured || Boolean(session)
+  const familyState = useFamily(session?.user?.id)
+  const { family } = familyState
 
-  const events = useSyncedTable('events', {
-    orderBy: 'timestamp',
-    localKey: 'gefenEvents',
-    enabled: signedIn
-  })
-  const profileItems = useSyncedTable('profile_items', {
-    orderBy: 'created_at',
-    localKey: 'gefenProfileItems',
-    enabled: signedIn
-  })
-  const settings = useBabySettings(signedIn)
+  const events = useSyncedTable('events', { orderBy: 'timestamp', familyId: family?.id })
+  const profileItems = useSyncedTable('profile_items', { orderBy: 'created_at', familyId: family?.id })
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type })
@@ -80,18 +79,37 @@ function App() {
   const updateProfileItem = withToast(profileItems.update, 'הפריט עודכן', 'שגיאה בעדכון הפריט')
   const deleteProfileItem = withToast(profileItems.remove, 'הפריט נמחק', 'שגיאה במחיקת הפריט')
 
-  const saveWeight = withToast(settings.saveWeight, 'המשקל עודכן', 'שגיאה בשמירת המשקל')
-  const savePhotoUrl = withToast(settings.savePhotoUrl, 'התמונה עודכנה', 'שגיאה בשמירת התמונה')
-  const savePhotoFile = withToast(settings.savePhotoFile, 'התמונה עודכנה', 'שגיאה בהעלאת התמונה')
+  const updateFamily = withToast(familyState.updateFamily, 'הפרטים עודכנו', 'שגיאה בעדכון הפרטים')
+  const saveWeight = withToast(familyState.saveWeight, 'המשקל עודכן', 'שגיאה בשמירת המשקל')
+  const savePhotoUrl = withToast(familyState.savePhotoUrl, 'התמונה עודכנה', 'שגיאה בשמירת התמונה')
+  const savePhotoFile = withToast(familyState.savePhotoFile, 'התמונה עודכנה', 'שגיאה בהעלאת התמונה')
 
   const handleSignOut = () => supabase.auth.signOut()
 
-  if (!authReady) {
-    return <div className="min-h-screen flex items-center justify-center text-gray-400">טוען...</div>
+  if (!isSupabaseConfigured) {
+    return <FullScreenMessage>חסרים פרטי חיבור ל-Supabase בקובץ .env</FullScreenMessage>
   }
 
-  if (!signedIn) {
+  if (!authReady) {
+    return <FullScreenMessage>טוען...</FullScreenMessage>
+  }
+
+  if (!session) {
     return <Login />
+  }
+
+  if (familyState.loading) {
+    return <FullScreenMessage>טוען...</FullScreenMessage>
+  }
+
+  if (!family) {
+    return (
+      <FamilySetup
+        onCreate={familyState.createFamily}
+        onJoin={familyState.joinFamily}
+        onSignOut={handleSignOut}
+      />
+    )
   }
 
   const recentEvents = events.rows.filter(e => isWithinLast24Hours(e.timestamp))
@@ -119,8 +137,10 @@ function App() {
         {view === 'main' && (
           <>
             <Header
-              weight={settings.weight}
-              photo={settings.photo}
+              babyName={family.baby_name}
+              birthDatetime={family.birth_datetime}
+              weight={family.weight_kg}
+              photo={familyState.photo}
               onSaveWeight={saveWeight}
               onSavePhotoUrl={savePhotoUrl}
               onSavePhotoFile={savePhotoFile}
@@ -144,13 +164,15 @@ function App() {
 
         {view === 'profile' && (
           <ProfileView
+            family={family}
+            photo={familyState.photo}
+            onUpdateFamily={updateFamily}
             items={profileItems.rows}
-            photo={settings.photo}
             onAdd={addProfileItem}
             onUpdate={updateProfileItem}
             onDelete={deleteProfileItem}
-            userEmail={session?.user?.email}
-            onSignOut={isSupabaseConfigured ? handleSignOut : null}
+            userEmail={session.user.email}
+            onSignOut={handleSignOut}
           />
         )}
       </div>

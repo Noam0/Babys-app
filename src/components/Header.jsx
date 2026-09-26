@@ -1,25 +1,27 @@
 import { useState, useEffect } from 'react'
 import { Edit2, Check, Camera } from 'lucide-react'
-import { formatAgeString } from '../utils/dateUtils'
+import { formatAgeString, formatBirthString } from '../utils/dateUtils'
+import BabyAvatar from './BabyAvatar'
 
-const Header = ({ weight, photo, onSaveWeight, onSavePhotoUrl, onSavePhotoFile }) => {
-  const [age, setAge] = useState(formatAgeString())
+const Header = ({ babyName, birthDatetime, weight, photo, onSaveWeight, onSavePhotoUrl, onSavePhotoFile }) => {
+  const [age, setAge] = useState(() => formatAgeString(birthDatetime))
   const [isEditingWeight, setIsEditingWeight] = useState(false)
-  const [tempWeight, setTempWeight] = useState(String(weight))
+  const [tempWeight, setTempWeight] = useState('')
   const [isEditingPhoto, setIsEditingPhoto] = useState(false)
   const [photoUrl, setPhotoUrl] = useState('')
   const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
+    setAge(formatAgeString(birthDatetime))
     const interval = setInterval(() => {
-      setAge(formatAgeString())
+      setAge(formatAgeString(birthDatetime))
     }, 60000)
 
     return () => clearInterval(interval)
-  }, [])
+  }, [birthDatetime])
 
   const startWeightEdit = () => {
-    setTempWeight(String(weight))
+    setTempWeight(weight != null ? String(weight) : '')
     setIsEditingWeight(true)
   }
 
@@ -57,11 +59,7 @@ const Header = ({ weight, photo, onSaveWeight, onSavePhotoUrl, onSavePhotoFile }
       {/* Baby Photo */}
       <div className="flex justify-center mb-4">
         <div className="relative">
-          <img
-            src={photo || "https://via.placeholder.com/120/0ea5e9/ffffff?text=גפן"}
-            alt="גפן"
-            className="w-28 h-28 rounded-full object-cover border-4 border-primary-200 shadow-md"
-          />
+          <BabyAvatar photo={photo} name={babyName} className="w-28 h-28 text-5xl" />
           <button
             onClick={() => setIsEditingPhoto(true)}
             className="absolute bottom-0 left-0 bg-primary-500 text-white p-2 rounded-full shadow-lg hover:bg-primary-600 active:scale-95 transition-all"
@@ -131,7 +129,7 @@ const Header = ({ weight, photo, onSaveWeight, onSavePhotoUrl, onSavePhotoFile }
 
       {/* Name */}
       <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">
-        גפן
+        {babyName}
       </h1>
 
       {/* Age Display */}
@@ -148,7 +146,7 @@ const Header = ({ weight, photo, onSaveWeight, onSavePhotoUrl, onSavePhotoFile }
             <div className="flex items-center gap-2">
               <input
                 type="number"
-                step="0.1"
+                step="0.01"
                 value={tempWeight}
                 inputMode="decimal"
                 onChange={(e) => setTempWeight(e.target.value)}
@@ -159,7 +157,7 @@ const Header = ({ weight, photo, onSaveWeight, onSavePhotoUrl, onSavePhotoFile }
             </div>
           ) : (
             <p className="text-2xl font-bold text-primary-700">
-              {weight.toFixed(1)} ק"ג
+              {weight != null ? `${Number(weight).toFixed(2)} ק"ג` : 'לא הוזן'}
             </p>
           )}
         </div>
@@ -173,7 +171,7 @@ const Header = ({ weight, photo, onSaveWeight, onSavePhotoUrl, onSavePhotoFile }
 
       {/* Birthdate Info */}
       <div className="text-center mt-4 text-xs text-gray-500">
-        נולד ב-09.09.2026 בשעה 13:35
+        {formatBirthString(birthDatetime)}
       </div>
     </div>
   )

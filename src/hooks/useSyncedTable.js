@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { supabase, isSupabaseConfigured, newId } from '../lib/supabase'
+import { supabase } from '../lib/supabase'
 
 const sortDesc = (rows, column) =>
   [...rows].sort((a, b) => new Date(b[column]) - new Date(a[column]))
@@ -8,57 +8,43 @@ const upsertRow = (rows, row, column) =>
   sortDesc([...rows.filter(r => r.id !== row.id), row], column)
 
 /**
- * Rows of a Supabase table kept in sync in real time.
- * Falls back to localStorage when Supabase isn't configured.
+ * A family's rows in a Supabase table, kept in sync in real time.
  */
-export function useSyncedTable(table, { orderBy, localKey, enabled = true }) {
+export function useSyncedTable(table, { orderBy, familyId }) {
   const [rows, setRows] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  const readLocal = useCallback(
-    () => JSON.parse(localStorage.getItem(localKey) || '[]'),
-    [localKey]
-  )
-
-  const writeLocal = useCallback(
-    (next) => {
-      localStorage.setItem(localKey, JSON.stringify(next))
-      return next
-    },
-    [localKey]
-  )
 
   const load = useCallback(async () => {
-    if (!isSupabaseConfigured) {
-      setRows(sortDesc(readLocal(), orderBy))
-      setLoading(false)
-      return
-    }
     const { data, error } = await supabase
       .from(table)
       .select('*')
+      .eq('family_id', familyId)
       .order(orderBy, { ascending: false })
     if (error) {
       console.error(`Error loading ${table}:`, error)
     } else {
       setRows(data)
     }
-    setLoading(false)
-  }, [table, orderBy, readLocal])
+  }, [table, orderBy, familyId])
 
   useEffect(() => {
-    if (!enabled) return
+    if (!familyId) {
+      setRows([])
+      return
+    }
     load()
-    if (!isSupabaseConfigured) return
 
+    const familyFilter = { schema: 'public', table, filter: `family_id=eq.${familyId}` }
     const channel = supabase
-      .channel(`${table}-changes`)
-      .on('postgres_changes', { event: '*', schema: 'public', table }, ({ eventType, new: row, old }) => {
-        setRows(prev =>
-          eventType === 'DELETE'
-            ? prev.filter(r => r.id !== old.id)
-            : upsertRow(prev, row, orderBy)
-        )
+      .channel(`${table}-${familyId}`)
+      .on('postgres_changes', { event: 'INSERT', ...familyFilter }, ({ new: row }) => {
+        setRows(prev => upsertRow(prev, row, orderBy))
+      })
+      .on('postgres_changes', { event: 'UPDATE', ...familyFilter }, ({ new: row }) => {
+        setRows(prev => upsertRow(prev, row, orderBy))
+      })
+      // Postgres can't filter DELETE events by column; unknown ids are simply ignored
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table }, ({ old }) => {
+        setRows(prev => prev.filter(r => r.id !== old.id))
       })
       .subscribe()
 
@@ -72,39 +58,30 @@ export function useSyncedTable(table, { orderBy, localKey, enabled = true }) {
       document.removeEventListener('visibilitychange', handleVisibility)
       supabase.removeChannel(channel)
     }
-  }, [table, orderBy, enabled, load])
+  }, [table, orderBy, familyId, load])
 
   const add = useCallback(async (values) => {
-    if (!isSupabaseConfigured) {
-      const row = { id: newId(), created_at: new Date().toISOString(), ...values }
-      setRows(prev => writeLocal(upsertRow(prev, row, orderBy)))
-      return row
-    }
-    const { data, error } = await supabase.from(table).insert(values).select().single()
+    const { data, error } = await supabase
+      .from(table)
+      .insert({ ...values, family_id: familyId })
+      .select()
+      .single()
     if (error) throw error
     setRows(prev => upsertRow(prev, data, orderBy))
     return data
-  }, [table, orderBy, writeLocal])
+  }, [table, orderBy, familyId])
 
   const update = useCallback(async (id, values) => {
-    if (!isSupabaseConfigured) {
-      setRows(prev => writeLocal(sortDesc(prev.map(r => (r.id === id ? { ...r, ...values } : r)), orderBy)))
-      return
-    }
     const { data, error } = await supabase.from(table).update(values).eq('id', id).select().single()
     if (error) throw error
     setRows(prev => upsertRow(prev, data, orderBy))
-  }, [table, orderBy, writeLocal])
+  }, [table, orderBy])
 
   const remove = useCallback(async (id) => {
-    if (!isSupabaseConfigured) {
-      setRows(prev => writeLocal(prev.filter(r => r.id !== id)))
-      return
-    }
     const { error } = await supabase.from(table).delete().eq('id', id)
     if (error) throw error
     setRows(prev => prev.filter(r => r.id !== id))
-  }, [table, writeLocal])
+  }, [table])
 
-  return { rows, loading, add, update, remove }
+  return { rows, add, update, remove }
 }

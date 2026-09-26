@@ -1,5 +1,7 @@
 import { useState } from 'react'
-import { Plus, Edit2, Trash2, Check, X, Calendar, LogOut } from 'lucide-react'
+import { Plus, Edit2, Trash2, Check, X, Calendar, LogOut, Copy } from 'lucide-react'
+import BabyAvatar from './BabyAvatar'
+import { formatBirthString, toDatetimeLocalValue } from '../utils/dateUtils'
 
 const EMPTY_FORM = { title: '', date: '', details: '' }
 
@@ -16,10 +18,37 @@ const CATEGORIES = [
 const formatDate = (dateString) =>
   dateString ? new Date(dateString).toLocaleDateString('he-IL') : ''
 
-const ProfileView = ({ items, photo, onAdd, onUpdate, onDelete, userEmail, onSignOut }) => {
+const ProfileView = ({ family, photo, onUpdateFamily, items, onAdd, onUpdate, onDelete, userEmail, onSignOut }) => {
   const [isAdding, setIsAdding] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [formData, setFormData] = useState(EMPTY_FORM)
+  const [isEditingBaby, setIsEditingBaby] = useState(false)
+  const [babyForm, setBabyForm] = useState({ name: '', birth: '' })
+  const [codeCopied, setCodeCopied] = useState(false)
+
+  const startBabyEdit = () => {
+    setBabyForm({ name: family.baby_name, birth: toDatetimeLocalValue(family.birth_datetime) })
+    setIsEditingBaby(true)
+  }
+
+  const handleBabySave = async () => {
+    if (!babyForm.name.trim() || !babyForm.birth) return
+    await onUpdateFamily({
+      baby_name: babyForm.name.trim(),
+      birth_datetime: new Date(babyForm.birth).toISOString()
+    })
+    setIsEditingBaby(false)
+  }
+
+  const copyInviteCode = async () => {
+    try {
+      await navigator.clipboard.writeText(family.invite_code)
+      setCodeCopied(true)
+      setTimeout(() => setCodeCopied(false), 2000)
+    } catch {
+      // Clipboard is unavailable outside HTTPS; the code stays visible for manual copying
+    }
+  }
 
   const isValid = formData.title.trim() && formData.details.trim()
 
@@ -63,18 +92,73 @@ const ProfileView = ({ items, photo, onAdd, onUpdate, onDelete, userEmail, onSig
   return (
     <div className="pb-6">
       {/* Header with Photo */}
-      <div className="bg-white rounded-3xl shadow-lg p-6 mb-6 mt-4">
+      <div className="bg-white rounded-3xl shadow-lg p-6 mb-4 mt-4">
         <div className="flex items-center gap-4">
-          <img
-            src={photo || "https://via.placeholder.com/80/0ea5e9/ffffff?text=גפן"}
-            alt="גפן"
-            className="w-20 h-20 rounded-full object-cover border-4 border-primary-200 shadow-md"
-          />
+          <BabyAvatar photo={photo} name={family.baby_name} className="w-20 h-20 text-3xl" />
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-800">פרופיל - גפן</h1>
-            <p className="text-sm text-gray-500">פרטים ומידע חשוב</p>
+            <h1 className="text-2xl font-bold text-gray-800">פרופיל - {family.baby_name}</h1>
+            <p className="text-sm text-gray-500">{formatBirthString(family.birth_datetime)}</p>
           </div>
+          {!isEditingBaby && (
+            <button
+              onClick={startBabyEdit}
+              className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all"
+            >
+              <Edit2 size={16} />
+            </button>
+          )}
         </div>
+
+        {isEditingBaby && (
+          <div className="mt-4 space-y-3">
+            <input
+              type="text"
+              value={babyForm.name}
+              onChange={(e) => setBabyForm({ ...babyForm, name: e.target.value })}
+              placeholder="שם התינוק"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500"
+            />
+            <input
+              type="datetime-local"
+              value={babyForm.birth}
+              onChange={(e) => setBabyForm({ ...babyForm, birth: e.target.value })}
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={handleBabySave}
+                className="flex-1 py-2 rounded-xl font-bold bg-primary-500 text-white hover:bg-primary-600 active:scale-95 transition-all"
+              >
+                שמור
+              </button>
+              <button
+                onClick={() => setIsEditingBaby(false)}
+                className="flex-1 py-2 rounded-xl font-bold bg-gray-200 text-gray-700 hover:bg-gray-300 active:scale-95 transition-all"
+              >
+                ביטול
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Invite Code */}
+      <div className="bg-white rounded-3xl shadow-lg p-5 mb-6">
+        <p className="text-sm font-medium text-gray-700 mb-2">קוד הצטרפות למשפחה</p>
+        <div className="flex items-center gap-3">
+          <span className="flex-1 text-center text-2xl font-mono font-bold tracking-widest text-primary-700 bg-primary-50 rounded-xl py-2" dir="ltr">
+            {family.invite_code}
+          </span>
+          <button
+            onClick={copyInviteCode}
+            className="p-3 bg-primary-500 text-white rounded-xl hover:bg-primary-600 active:scale-95 transition-all"
+          >
+            {codeCopied ? <Check size={20} /> : <Copy size={20} />}
+          </button>
+        </div>
+        <p className="text-xs text-gray-400 mt-2">
+          שלחו את הקוד להורה השני: נרשמים לאפליקציה, בוחרים "הצטרפות" ומזינים את הקוד.
+        </p>
       </div>
 
       {/* Add Button */}

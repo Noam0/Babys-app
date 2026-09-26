@@ -44,12 +44,6 @@ const Login = () => {
 
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
-
-      const { data: isFamily } = await supabase.rpc('is_family')
-      if (!isFamily) {
-        await supabase.auth.signOut()
-        setError('המשתמש הזה לא מורשה לגשת לאפליקציה')
-      }
     } catch (err) {
       setError(translateError(err.message))
     } finally {
@@ -60,7 +54,7 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center px-4" dir="rtl">
       <div className="bg-white rounded-3xl shadow-lg p-6 w-full max-w-sm">
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-1">גפן</h1>
+        <h1 className="text-3xl font-bold text-center text-gray-800 mb-1">מעקב תינוק</h1>
         <p className="text-center text-gray-500 mb-6">
           {isSignUp ? 'הרשמה' : 'התחברות'}
         </p>

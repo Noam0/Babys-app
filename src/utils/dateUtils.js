@@ -1,23 +1,28 @@
-import { formatDistanceToNow, differenceInDays, differenceInHours, differenceInMinutes, format, subHours } from 'date-fns'
+import { differenceInDays, differenceInHours, format, subHours } from 'date-fns'
 
-// Gafen's birthdate
-export const BIRTHDATE = new Date('2026-09-09T13:35:00')
-
-export const calculateAge = () => {
+export const calculateAge = (birthDatetime) => {
   const now = new Date()
-  const days = differenceInDays(now, BIRTHDATE)
-  const hours = differenceInHours(now, BIRTHDATE) % 24
-  
+  const birth = new Date(birthDatetime)
+  const days = differenceInDays(now, birth)
+  const hours = differenceInHours(now, birth) % 24
+
   return { days, hours }
 }
 
-export const formatAgeString = () => {
-  const { days, hours } = calculateAge()
+export const formatAgeString = (birthDatetime) => {
+  const { days, hours } = calculateAge(birthDatetime)
   return `בן ${days} ימים ו-${hours} שעות`
 }
 
+export const formatBirthString = (birthDatetime) => {
+  const birth = new Date(birthDatetime)
+  return `נולד ב-${format(birth, 'dd.MM.yyyy')} בשעה ${format(birth, 'HH:mm')}`
+}
+
+// Value format expected by <input type="datetime-local">
+export const toDatetimeLocalValue = (date) => format(new Date(date), "yyyy-MM-dd'T'HH:mm")
+
 export const formatEventTime = (date) => {
-  // Format as HH:MM (24-hour format)
   return format(new Date(date), 'HH:mm')
 }
 
