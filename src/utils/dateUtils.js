@@ -36,3 +36,23 @@ export const isWithinLast24Hours = (date) => {
   const eventDate = new Date(date)
   return eventDate >= twentyFourHoursAgo && eventDate <= now
 }
+
+const HEBREW_DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
+
+export const toLocalDateKey = (date) => format(new Date(date), 'yyyy-MM-dd')
+
+export const formatDayHeading = (date) => {
+  const day = new Date(date)
+  const today = new Date()
+  const yesterday = subHours(today, 24)
+  const datePart = format(day, 'dd.MM.yyyy')
+  const weekday = HEBREW_DAYS[day.getDay()]
+
+  if (toLocalDateKey(day) === toLocalDateKey(today)) {
+    return `היום, יום ${weekday} ${datePart}`
+  }
+  if (toLocalDateKey(day) === toLocalDateKey(yesterday)) {
+    return `אתמול, יום ${weekday} ${datePart}`
+  }
+  return `יום ${weekday}, ${datePart}`
+}

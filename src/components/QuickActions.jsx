@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Baby, Package, Moon, Activity, Pill, Plus, Square } from 'lucide-react'
 import ActionModal from './ActionModal'
+import { ACTION_OPTIONS } from '../utils/eventOptions'
 
 const TUMMY_START_KEY = 'gefenTummyStart'
 
@@ -20,32 +21,21 @@ const QuickActions = ({ onAddEvent }) => {
       icon: Baby,
       label: 'הנקה',
       color: 'breastfeed',
-      options: [
-        { label: 'ימין', value: 'right' },
-        { label: 'שמאל', value: 'left' },
-        { label: 'שני הצדדים', value: 'both' }
-      ]
+      options: ACTION_OPTIONS.breastfeed
     },
     {
       id: 'diaper',
       icon: Package,
       label: 'החתלה',
       color: 'diaper',
-      options: [
-        { label: 'פיפי', value: 'pee' },
-        { label: 'קקי', value: 'poop' },
-        { label: 'גם וגם', value: 'both' }
-      ]
+      options: ACTION_OPTIONS.diaper
     },
     {
       id: 'sleep',
       icon: Moon,
       label: 'שינה',
       color: 'sleep',
-      options: [
-        { label: 'נרדם', value: 'fell_asleep' },
-        { label: 'התעורר', value: 'woke_up' }
-      ]
+      options: ACTION_OPTIONS.sleep
     },
     {
       id: 'tummy',
@@ -58,10 +48,7 @@ const QuickActions = ({ onAddEvent }) => {
       icon: Pill,
       label: 'תרופות',
       color: 'medication',
-      options: [
-        { label: 'קלקסן (מיכל)', value: 'clexane_michal' },
-        { label: 'ויטמין די (גפן)', value: 'vitamin_d_gefen' }
-      ]
+      options: ACTION_OPTIONS.medication
     },
     {
       id: 'other',
