@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Edit2, Trash2, Check, X, Calendar, LogOut, Copy } from 'lucide-react'
+import { Plus, Edit2, Trash2, Check, X, Calendar, LogOut } from 'lucide-react'
 import BabyAvatar from './BabyAvatar'
 import ConfirmDialog from './ConfirmDialog'
 import { formatBirthString } from '../utils/dateUtils'
@@ -7,8 +7,9 @@ import { DateField, DateTimeButton } from './DateTimeFields'
 
 const EMPTY_FORM = { title: '', date: '', details: '' }
 
+const ID_TITLE = 'תעודת זהות'
+
 const CATEGORIES = [
-  { label: 'תעודת זהות', icon: '🆔' },
   { label: 'תורים קרובים', icon: '📅' },
   { label: 'פנקס חיסונים', icon: '💉' },
   { label: 'אלרגיות', icon: '⚠️' },
@@ -26,8 +27,9 @@ const ProfileView = ({ family, photo, onUpdateFamily, items, onAdd, onUpdate, on
   const [formData, setFormData] = useState(EMPTY_FORM)
   const [isEditingBaby, setIsEditingBaby] = useState(false)
   const [babyForm, setBabyForm] = useState({ name: '', birth: '' })
-  const [codeCopied, setCodeCopied] = useState(false)
   const [itemToDelete, setItemToDelete] = useState(null)
+  const [isEditingId, setIsEditingId] = useState(false)
+  const [idDraft, setIdDraft] = useState('')
 
   const startBabyEdit = () => {
     setBabyForm({ name: family.baby_name, birth: new Date(family.birth_datetime) })
@@ -43,14 +45,22 @@ const ProfileView = ({ family, photo, onUpdateFamily, items, onAdd, onUpdate, on
     setIsEditingBaby(false)
   }
 
-  const copyInviteCode = async () => {
-    try {
-      await navigator.clipboard.writeText(family.invite_code)
-      setCodeCopied(true)
-      setTimeout(() => setCodeCopied(false), 2000)
-    } catch {
-      // Clipboard is unavailable outside HTTPS; the code stays visible for manual copying
+  const idItem = items.find((item) => item.title === ID_TITLE)
+  const otherItems = items.filter((item) => item.title !== ID_TITLE)
+
+  const startIdEdit = () => {
+    setIdDraft(idItem?.details || '')
+    setIsEditingId(true)
+  }
+
+  const saveIdDocument = async () => {
+    const details = idDraft.trim()
+    if (idItem) {
+      await onUpdate(idItem.id, { title: ID_TITLE, date: idItem.date, details })
+    } else if (details) {
+      await onAdd({ title: ID_TITLE, date: null, details })
     }
+    setIsEditingId(false)
   }
 
   const isValid = formData.title.trim() && formData.details.trim()
@@ -68,7 +78,16 @@ const ProfileView = ({ family, photo, onUpdateFamily, items, onAdd, onUpdate, on
       date: formData.date || null,
       details: formData.details.trim()
     }
-    if (editingId) {
+    if (values.title === ID_TITLE) {
+      if (idItem && idItem.id !== editingId) {
+        await onUpdate(idItem.id, values)
+        if (editingId) await onDelete(editingId)
+      } else if (editingId) {
+        await onUpdate(editingId, values)
+      } else {
+        await onAdd(values)
+      }
+    } else if (editingId) {
       await onUpdate(editingId, values)
     } else {
       await onAdd(values)
@@ -97,7 +116,7 @@ const ProfileView = ({ family, photo, onUpdateFamily, items, onAdd, onUpdate, on
         <div className="flex items-center gap-3">
           <BabyAvatar photo={photo} name={family.baby_name} className="w-16 h-16 text-2xl" />
           <div className="flex-1">
-            <h1 className="text-xl font-bold text-gray-800">פרופיל - {family.baby_name}</h1>
+            <h1 className="text-xl font-bold text-gray-800">{family.baby_name}</h1>
             <p className="text-sm text-gray-500">{formatBirthString(family.birth_datetime)}</p>
           </div>
           {!isEditingBaby && (
@@ -142,23 +161,49 @@ const ProfileView = ({ family, photo, onUpdateFamily, items, onAdd, onUpdate, on
         )}
       </div>
 
-      {/* Invite Code */}
+      {/* ID document */}
       <div className="bg-white rounded-2xl shadow-md p-4 mb-5">
-        <p className="text-sm font-medium text-gray-700 mb-2">קוד הצטרפות למשפחה</p>
-        <div className="flex items-center gap-2.5">
-          <span className="flex-1 text-center text-xl font-mono font-bold tracking-widest text-primary-700 bg-primary-50 rounded-xl py-1.5" dir="ltr">
-            {family.invite_code}
-          </span>
-          <button
-            onClick={copyInviteCode}
-            className="p-2.5 bg-primary-500 text-white rounded-xl hover:bg-primary-600 active:scale-95 transition-all"
-          >
-            {codeCopied ? <Check size={18} /> : <Copy size={18} />}
-          </button>
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <h2 className="text-base font-bold text-gray-800">תעודת זהות</h2>
+          {!isEditingId && (
+            <button
+              onClick={startIdEdit}
+              className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all"
+            >
+              <Edit2 size={16} />
+            </button>
+          )}
         </div>
-        <p className="text-xs text-gray-400 mt-2">
-          שלחו את הקוד להורה השני: נרשמים לאפליקציה, בוחרים "הצטרפות" ומזינים את הקוד.
-        </p>
+        {isEditingId ? (
+          <div className="space-y-2">
+            <textarea
+              value={idDraft}
+              onChange={(e) => setIdDraft(e.target.value)}
+              placeholder="טקסט חופשי: מספר זהות, שם מלא, פרטים נוספים..."
+              rows={4}
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500 resize-none text-sm"
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={saveIdDocument}
+                className="flex-1 py-2 rounded-xl font-bold bg-primary-500 text-white hover:bg-primary-600 active:scale-95 transition-all"
+              >
+                שמור
+              </button>
+              <button
+                onClick={() => setIsEditingId(false)}
+                className="flex-1 py-2 rounded-xl font-bold bg-gray-200 text-gray-700 hover:bg-gray-300 active:scale-95 transition-all"
+              >
+                ביטול
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className={`text-sm whitespace-pre-wrap ${idItem?.details?.trim() ? 'text-gray-700' : 'text-gray-400'}`}>
+            {idItem?.details?.trim() || 'לא הוזן'}
+          </p>
+        )}
       </div>
 
       {/* Add Button */}
@@ -210,7 +255,7 @@ const ProfileView = ({ family, photo, onUpdateFamily, items, onAdd, onUpdate, on
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="לדוגמה: תעודת זהות, אלרגיה לחלבון..."
+              placeholder="לדוגמה: אלרגיה לחלבון, תור לרופא..."
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500"
             />
           </div>
@@ -267,15 +312,8 @@ const ProfileView = ({ family, photo, onUpdateFamily, items, onAdd, onUpdate, on
 
       {/* Profile Items List */}
       <div className="space-y-3">
-        {items.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow p-8 text-center">
-            <p className="text-gray-400 text-lg">אין פריטים בפרופיל</p>
-            <p className="text-gray-300 text-sm mt-2">
-              לחץ על "הוסף פריט חדש" להתחיל
-            </p>
-          </div>
-        ) : (
-          items.map((item) => (
+        {otherItems.length === 0 ? null : (
+          otherItems.map((item) => (
             <div
               key={item.id}
               className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-all"
