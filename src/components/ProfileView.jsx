@@ -3,7 +3,7 @@ import { Plus, Edit2, Trash2, Check, X, Calendar, LogOut, Copy } from 'lucide-re
 import BabyAvatar from './BabyAvatar'
 import ConfirmDialog from './ConfirmDialog'
 import { formatBirthString } from '../utils/dateUtils'
-import { DateField, DateTimeFields } from './DateTimeFields'
+import { DateField, DateTimeButton } from './DateTimeFields'
 
 const EMPTY_FORM = { title: '', date: '', details: '' }
 
@@ -93,11 +93,11 @@ const ProfileView = ({ family, photo, onUpdateFamily, items, onAdd, onUpdate, on
   return (
     <div className="pb-6">
       {/* Header with Photo */}
-      <div className="bg-white rounded-3xl shadow-lg p-6 mb-4 mt-4">
-        <div className="flex items-center gap-4">
-          <BabyAvatar photo={photo} name={family.baby_name} className="w-20 h-20 text-3xl" />
+      <div className="bg-white rounded-2xl shadow-md p-4 mb-3 mt-3">
+        <div className="flex items-center gap-3">
+          <BabyAvatar photo={photo} name={family.baby_name} className="w-16 h-16 text-2xl" />
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-800">פרופיל - {family.baby_name}</h1>
+            <h1 className="text-xl font-bold text-gray-800">פרופיל - {family.baby_name}</h1>
             <p className="text-sm text-gray-500">{formatBirthString(family.birth_datetime)}</p>
           </div>
           {!isEditingBaby && (
@@ -119,8 +119,8 @@ const ProfileView = ({ family, photo, onUpdateFamily, items, onAdd, onUpdate, on
               placeholder="שם התינוק"
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-primary-500"
             />
-            <DateTimeFields
-              label=""
+            <DateTimeButton
+              label="תאריך ושעת לידה"
               value={babyForm.birth}
               onChange={(birth) => setBabyForm({ ...babyForm, birth })}
             />
@@ -143,17 +143,17 @@ const ProfileView = ({ family, photo, onUpdateFamily, items, onAdd, onUpdate, on
       </div>
 
       {/* Invite Code */}
-      <div className="bg-white rounded-3xl shadow-lg p-5 mb-6">
+      <div className="bg-white rounded-2xl shadow-md p-4 mb-5">
         <p className="text-sm font-medium text-gray-700 mb-2">קוד הצטרפות למשפחה</p>
-        <div className="flex items-center gap-3">
-          <span className="flex-1 text-center text-2xl font-mono font-bold tracking-widest text-primary-700 bg-primary-50 rounded-xl py-2" dir="ltr">
+        <div className="flex items-center gap-2.5">
+          <span className="flex-1 text-center text-xl font-mono font-bold tracking-widest text-primary-700 bg-primary-50 rounded-xl py-1.5" dir="ltr">
             {family.invite_code}
           </span>
           <button
             onClick={copyInviteCode}
-            className="p-3 bg-primary-500 text-white rounded-xl hover:bg-primary-600 active:scale-95 transition-all"
+            className="p-2.5 bg-primary-500 text-white rounded-xl hover:bg-primary-600 active:scale-95 transition-all"
           >
-            {codeCopied ? <Check size={20} /> : <Copy size={20} />}
+            {codeCopied ? <Check size={18} /> : <Copy size={18} />}
           </button>
         </div>
         <p className="text-xs text-gray-400 mt-2">
@@ -165,17 +165,17 @@ const ProfileView = ({ family, photo, onUpdateFamily, items, onAdd, onUpdate, on
       {!isAdding && (
         <button
           onClick={() => setIsAdding(true)}
-          className="w-full mb-4 bg-gradient-to-r from-primary-500 to-primary-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"
+          className="w-full mb-4 bg-gradient-to-r from-primary-500 to-primary-600 text-white py-3 rounded-xl font-bold shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
         >
-          <Plus size={24} />
+          <Plus size={20} />
           <span>הוסף פריט חדש</span>
         </button>
       )}
 
       {/* Add/Edit Form */}
       {isAdding && (
-        <div className="bg-white rounded-3xl shadow-lg p-6 mb-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">
+        <div className="bg-white rounded-2xl shadow-md p-5 mb-5">
+          <h3 className="text-lg font-bold text-gray-800 mb-3">
             {editingId ? 'ערוך פריט' : 'פריט חדש'}
           </h3>
 
@@ -278,7 +278,7 @@ const ProfileView = ({ family, photo, onUpdateFamily, items, onAdd, onUpdate, on
           items.map((item) => (
             <div
               key={item.id}
-              className="bg-white rounded-2xl shadow-md p-5 hover:shadow-lg transition-all"
+              className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-all"
             >
               <div className="flex justify-between items-start mb-2">
                 <div className="flex-1">

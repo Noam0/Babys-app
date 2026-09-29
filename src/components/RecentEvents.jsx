@@ -2,17 +2,17 @@ import EventItem from './EventItem'
 
 const RecentEvents = ({ events, latestWeightId, onUpdate, onDelete }) => {
   return (
-    <div className="mb-6">
-      <h2 className="text-xl font-bold text-gray-800 mb-4">
+    <div className="mb-5">
+      <h2 className="text-lg font-bold text-gray-800 mb-3">
         אירועים אחרונים (24 שעות)
       </h2>
       {events.length === 0 ? (
-        <div className="bg-white rounded-2xl shadow p-8 text-center">
-          <p className="text-gray-400 text-lg">אין אירועים להצגה</p>
+        <div className="bg-white rounded-2xl shadow p-6 text-center">
+          <p className="text-gray-400 text-base">אין אירועים להצגה</p>
           <p className="text-gray-300 text-sm mt-2">התחל לרשום פעילויות כדי לראות אותן כאן</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {events.map((event) => (
             <EventItem
               key={event.id}

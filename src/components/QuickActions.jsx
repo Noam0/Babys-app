@@ -103,9 +103,9 @@ const QuickActions = ({ onAddEvent }) => {
 
   return (
     <>
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">פעולות מהירות</h2>
-        <div className="grid grid-cols-2 gap-3">
+      <div className="mb-5">
+        <h2 className="text-lg font-bold text-gray-800 mb-3">פעולות מהירות</h2>
+        <div className="grid grid-cols-2 gap-2.5">
           {actions.map((action) => {
             const Icon = action.icon
             const bgColors = getColorClasses(action.color)
@@ -117,23 +117,23 @@ const QuickActions = ({ onAddEvent }) => {
                 key={action.id}
                 onClick={() => handleActionClick(action)}
                 className={`${bgColors} 
-                  hover:shadow-xl active:scale-95 transition-all duration-200 
-                  rounded-2xl p-6 flex flex-col items-center justify-center gap-3 
-                  font-semibold shadow-lg touch-manipulation
-                  min-h-[120px] ${isTummyRunning ? 'ring-4 ring-white ring-offset-2' : ''}`}
+                  hover:shadow-lg active:scale-95 transition-all duration-200 
+                  rounded-xl p-4 flex flex-col items-center justify-center gap-2 
+                  font-semibold shadow-md touch-manipulation
+                  min-h-[88px] ${isTummyRunning ? 'ring-4 ring-white ring-offset-2' : ''}`}
               >
                 {isTummyRunning ? (
                   <>
-                    <Square size={32} strokeWidth={2} className="text-white drop-shadow-md" />
-                    <span className="text-2xl font-bold text-white drop-shadow-md">
+                    <Square size={24} strokeWidth={2} className="text-white drop-shadow-md" />
+                    <span className="text-xl font-bold text-white drop-shadow-md">
                       {formatTimerDisplay(tummyTimeSeconds)}
                     </span>
-                    <span className="text-xs text-white drop-shadow-md">לחץ לסיום</span>
+                    <span className="text-[11px] text-white drop-shadow-md">לחץ לסיום</span>
                   </>
                 ) : (
                   <>
-                    <Icon size={32} strokeWidth={2} className="text-white drop-shadow-md" />
-                    <span className="text-base text-white drop-shadow-md">{action.label}</span>
+                    <Icon size={26} strokeWidth={2} className="text-white drop-shadow-md" />
+                    <span className="text-sm text-white drop-shadow-md">{action.label}</span>
                   </>
                 )}
               </button>

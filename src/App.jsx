@@ -137,19 +137,19 @@ function App() {
   const latestWeightId = events.rows.find(e => e.event_type === 'weight')?.id
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white pb-20" dir="rtl">
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
-        <div className="flex justify-around items-center h-16 pb-safe-bottom">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white pb-[calc(4.75rem+env(safe-area-inset-bottom))]" dir="rtl">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 pb-safe-bottom">
+        <div className="flex justify-around items-stretch">
           {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               onClick={() => setView(id)}
-              className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
+              className={`flex flex-col items-center justify-center gap-0.5 flex-1 py-2.5 transition-colors ${
                 view === id ? 'text-primary-500' : 'text-gray-400'
               }`}
             >
-              <Icon size={24} />
-              <span className="text-xs mt-1">{label}</span>
+              <Icon size={21} />
+              <span className="text-[11px] font-medium">{label}</span>
             </button>
           ))}
         </div>

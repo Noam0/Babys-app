@@ -71,14 +71,14 @@ const HistoryView = ({ events, latestWeightId, onUpdate, onDelete }) => {
     }`
 
   return (
-    <div className="mb-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-gray-800">היסטוריה מלאה</h2>
+    <div className="mb-5">
+      <div className="flex justify-between items-center mb-3">
+        <h2 className="text-lg font-bold text-gray-800">היסטוריה מלאה</h2>
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary-100 text-primary-700 rounded-xl font-medium hover:bg-primary-200 transition-colors touch-manipulation"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-100 text-primary-700 rounded-xl font-medium text-sm hover:bg-primary-200 transition-colors touch-manipulation"
         >
-          <Filter size={18} />
+          <Filter size={16} />
           <span>סינון</span>
         </button>
       </div>
@@ -145,13 +145,13 @@ const HistoryView = ({ events, latestWeightId, onUpdate, onDelete }) => {
           onDelete={onDelete}
         />
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-4">
           {groups.map((group) => (
             <section key={group.key}>
-              <h3 className="sticky top-0 z-10 bg-gradient-to-b from-blue-50 to-blue-50/80 backdrop-blur-sm text-sm font-bold text-primary-700 px-1 py-2 mb-2">
+              <h3 className="sticky top-0 z-10 bg-gradient-to-b from-blue-50 to-blue-50/80 backdrop-blur-sm text-xs font-bold text-primary-700 px-1 py-1.5 mb-1.5">
                 {group.heading}
               </h3>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {group.events.map((event) => (
                   <EventItem
                     key={event.id}

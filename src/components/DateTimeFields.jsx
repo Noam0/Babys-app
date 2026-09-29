@@ -1,3 +1,7 @@
+import { useState } from 'react'
+import { Clock } from 'lucide-react'
+import { formatFullDate } from '../utils/dateUtils'
+
 const MONTHS = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר']
 
 const range = (from, to) => Array.from({ length: to - from + 1 }, (_, i) => from + i)
@@ -11,7 +15,7 @@ const MINUTES = range(0, 59)
 const pad = (value) => String(value).padStart(2, '0')
 
 const selectClass =
-  'w-full min-w-0 max-w-full px-2 py-2 border border-gray-200 rounded-xl bg-gray-50 text-gray-800 text-sm focus:outline-none focus:border-primary-500'
+  'w-full min-w-0 max-w-full px-2 py-1.5 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 text-sm focus:outline-none focus:border-primary-500'
 
 const Select = ({ value, onChange, children }) => (
   <select
@@ -40,7 +44,7 @@ export const DateField = ({ value, onChange, className = '' }) => {
   }
 
   return (
-    <div className={`grid grid-cols-3 gap-2 min-w-0 ${className}`}>
+    <div className={`grid grid-cols-3 gap-1.5 min-w-0 ${className}`}>
       <Select value={day} onChange={(next) => emit(year, month, Number(next))}>
         {DAYS.map((item) => (
           <option key={item} value={item}>{item}</option>
@@ -78,7 +82,7 @@ export const DateTimeFields = ({ value, onChange, label = 'תאריך ושעה' 
   return (
     <div className="min-w-0 w-full overflow-hidden">
       {label && <p className="text-xs font-medium opacity-80 mb-1">{label}</p>}
-      <div className="grid grid-cols-3 gap-2 min-w-0 mb-2">
+      <div className="grid grid-cols-3 gap-1.5 min-w-0 mb-1.5">
         <Select value={day} onChange={(next) => emit({ ...parts, day: Number(next) })}>
           {DAYS.map((item) => (
             <option key={item} value={item}>{item}</option>
@@ -95,7 +99,7 @@ export const DateTimeFields = ({ value, onChange, label = 'תאריך ושעה' 
           ))}
         </Select>
       </div>
-      <div className="grid grid-cols-2 gap-2 min-w-0">
+      <div className="grid grid-cols-2 gap-1.5 min-w-0">
         <Select value={hour} onChange={(next) => emit({ ...parts, hour: Number(next) })}>
           {HOURS.map((item) => (
             <option key={item} value={item}>{pad(item)}</option>
@@ -107,6 +111,66 @@ export const DateTimeFields = ({ value, onChange, label = 'תאריך ושעה' 
           ))}
         </Select>
       </div>
+    </div>
+  )
+}
+
+// A single button showing the current date/time; tapping it opens a small
+// popup with the DateTimeFields grid, instead of showing all 5 selects inline.
+export const DateTimeButton = ({ value, onChange, label = 'תאריך ושעה' }) => {
+  const [open, setOpen] = useState(false)
+  const [draft, setDraft] = useState(value)
+
+  const openPicker = () => {
+    setDraft(value)
+    setOpen(true)
+  }
+
+  const confirm = () => {
+    onChange(draft)
+    setOpen(false)
+  }
+
+  return (
+    <div className="min-w-0">
+      <button
+        type="button"
+        onClick={openPicker}
+        className="w-full min-w-0 flex items-center justify-center gap-2 px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-700 text-sm font-medium hover:bg-gray-100 transition-colors"
+      >
+        <Clock size={14} />
+        <span className="truncate">{formatFullDate(value)}</span>
+      </button>
+
+      {open && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70] p-4"
+          onClick={() => setOpen(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-xs w-full p-4"
+            dir="rtl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h4 className="font-bold text-gray-800 mb-3 text-sm">{label}</h4>
+            <DateTimeFields value={draft} onChange={setDraft} label="" />
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={confirm}
+                className="flex-1 py-2 rounded-lg font-bold text-sm bg-primary-500 text-white active:scale-95 transition-all"
+              >
+                אישור
+              </button>
+              <button
+                onClick={() => setOpen(false)}
+                className="flex-1 py-2 rounded-lg font-bold text-sm bg-gray-100 text-gray-700 active:scale-95 transition-all"
+              >
+                ביטול
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
